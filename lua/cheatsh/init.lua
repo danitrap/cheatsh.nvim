@@ -6,12 +6,16 @@ local M = {}
 
 local CHEATSH_URL = "https://cheat.sh/"
 
----@class Config
+---@class cheatsh.Config
 ---@field split string vsplit or split
 ---@field size number percentage of the screen
-CONFIG = {
+local config = {
 	split = "vsplit",
 	size = 50,
+}
+
+local state = {
+	win = nil,
 }
 
 ---@param query string The search query
@@ -39,8 +43,8 @@ end
 ---@param size number Desired size as percentage
 ---@param split_type string "vsplit" or "split"
 local function adjust_window_size(size, split_type)
-	local total_width = vim.api.nvim_get_option_value("columns", {})
-	local total_height = vim.api.nvim_get_option_value("lines", {})
+	local total_width = vim.o.columns
+	local total_height = vim.o.lines
 
 	if split_type == "vsplit" then
 		local width = math.floor(total_width * (size / 100))
@@ -63,10 +67,17 @@ local function create_output_buffer(query)
 
 	vim.api.nvim_buf_set_keymap(buf, "n", "q", ":q<CR>", { noremap = true, silent = true })
 
+	vim.api.nvim_create_autocmd("BufWipeout", {
+		buffer = buf,
+		callback = function()
+			state.win = nil
+		end,
+	})
+
 	return buf
 end
 
----@param opts Config The configuration options
+---@param opts cheatsh.Config The configuration options
 M.setup = function(opts)
 	if opts then
 		vim.validate({
@@ -75,7 +86,7 @@ M.setup = function(opts)
 		})
 	end
 
-	CONFIG = vim.tbl_extend("force", CONFIG, opts or {})
+	config = vim.tbl_extend("force", config, opts or {})
 end
 
 ---@param query string The search query
@@ -88,16 +99,22 @@ function M.fetch(query)
 		return
 	end
 
-	vim.cmd(CONFIG.split)
+	vim.cmd(config.split)
 	local term_buf = create_output_buffer(query)
 	if not term_buf then
 		return
 	end
 
 	vim.api.nvim_win_set_buf(0, term_buf)
-	local term_chan = vim.api.nvim_open_term(term_buf, {})
 
-	adjust_window_size(CONFIG.size, CONFIG.split)
+	if state.win then
+		vim.api.nvim_win_close(state.win, true)
+	end
+
+	local term_chan = vim.api.nvim_open_term(term_buf, {})
+	state.win = vim.api.nvim_get_current_win()
+
+	adjust_window_size(config.size, config.split)
 
 	vim.api.nvim_chan_send(term_chan, output.stdout)
 end
