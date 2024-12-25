@@ -37,4 +37,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```vim
 :CheatSh python list comprehension
+:Cheatsh find
+:CheatSh awk
+:CheatSh tr
 ```
