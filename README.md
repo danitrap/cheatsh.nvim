@@ -22,6 +22,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
     'danitrap/cheatsh.nvim',
     opts = {} -- Optional configuration, you can leave it empty
+}
 ```
 
 ## Configuration
