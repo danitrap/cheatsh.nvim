@@ -15,8 +15,6 @@ M.check = function()
 	else
 		vim.health.ok("cheat.sh is accessible")
 	end
-
-	vim.health.finish()
 end
 
 return M
